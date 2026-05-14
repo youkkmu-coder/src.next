@@ -51,14 +51,6 @@
         android:layout_marginTop="16dp"
         android:visibility="gone"/>
 
-    <!-- Middle spacer -->
-    <View
-        android:id="@+id/ntp_middle_spacer"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_weight="0"
-        android:visibility="invisible" />
-
     <!-- Insertion point of the SiteSectionView, see NewTabPageLayout#insertSiteSection() -->
 
     <ViewStub

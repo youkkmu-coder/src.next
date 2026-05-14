@@ -114,6 +114,7 @@ import org.chromium.chrome.browser.theme.ThemeColorProvider.ThemeColorObserver;
 import org.chromium.chrome.browser.theme.ThemeColorProvider.TintObserver;
 import org.chromium.chrome.browser.theme.TopUiThemeColorProvider;
 import org.chromium.chrome.browser.toolbar.bottom.BottomControlsCoordinator;
+import org.chromium.chrome.browser.toolbar.bottom.KiwiBottomNavController;
 import org.chromium.chrome.browser.toolbar.bottom.ScrollingBottomViewResourceFrameLayout;
 import org.chromium.chrome.browser.toolbar.load_progress.LoadProgressCoordinator;
 import org.chromium.chrome.browser.toolbar.menu_button.MenuButtonCoordinator;
@@ -1239,12 +1240,55 @@ public class ToolbarManager implements UrlFocusChangeListener, ThemeColorObserve
     }
 
     /**
+     * Kiwi Phase 3 — Slim Bottom Navigation controller.
+     * Null until {@link #enableBottomControls()} has been called.
+     */
+    @Nullable private KiwiBottomNavController mKiwiBottomNavController;
+
+    /**
      * Enable the bottom controls.
      */
     public void enableBottomControls() {
         View root = ((ViewStub) mActivity.findViewById(R.id.bottom_controls_stub)).inflate();
+
+        // Kiwi Phase 3: inflate the slim 4-button nav bar into the bottom slot.
+        // The slot is a plain FrameLayout so we can inflate our own layout
+        // alongside (or instead of) the Tab Group UI strip.
+        android.view.LayoutInflater inflater =
+                android.view.LayoutInflater.from(mActivity);
+        android.view.ViewGroup slot =
+                root.findViewById(R.id.bottom_container_slot);
+        View kiwiNav = inflater.inflate(R.layout.kiwi_bottom_nav, slot, false);
+        slot.addView(kiwiNav);
+
+        // Retrieve the tab-switcher click handler from the top toolbar coordinator
+        // so the bottom tabs button opens the same switcher.
+        View.OnClickListener tabSwitcherClick = v -> {
+            if (mToolbar != null) mToolbar.onTabSwitcherTransitionFinished();
+            // Delegate to the standard tab-switcher entry path via the existing
+            // handler wired in initializeWithNative().
+            View topTabButton = mActivity.findViewById(R.id.tab_switcher_button);
+            if (topTabButton != null) topTabButton.performClick();
+        };
+
+        // Wire menu button to the existing MenuButtonCoordinator's popup.
+        View.OnClickListener menuClick = v -> {
+            if (mMenuButtonCoordinator != null) {
+                mMenuButtonCoordinator.onMenuButtonClicked();
+            }
+        };
+
+        mKiwiBottomNavController = new KiwiBottomNavController(
+                kiwiNav,
+                mActivity,
+                mActivityTabProvider,
+                mTabModelSelectorSupplier.get(),
+                mTabCountProvider,
+                tabSwitcherClick,
+                menuClick);
+
         mTabGroupUi = TabManagementModuleProvider.getDelegate().createTabGroupUi(mActivity,
-                root.findViewById(R.id.bottom_container_slot), mIncognitoStateProvider,
+                slot, mIncognitoStateProvider,
                 mScrimCoordinator, mOmniboxFocusStateSupplier, mBottomSheetController,
                 mActivityLifecycleDispatcher, mIsWarmOnResumeSupplier, mTabModelSelector,
                 mTabContentManager, mCompositorViewHolder,
@@ -1454,6 +1498,11 @@ public class ToolbarManager implements UrlFocusChangeListener, ThemeColorObserve
         }
 
         HomepageManager.getInstance().removeListener(mHomepageStateListener);
+
+        if (mKiwiBottomNavController != null) {
+            mKiwiBottomNavController.destroy();
+            mKiwiBottomNavController = null;
+        }
 
         if (mBottomControlsCoordinatorSupplier.get() != null) {
             mBottomControlsCoordinatorSupplier.get().destroy();

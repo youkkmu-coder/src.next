@@ -21,6 +21,12 @@
         android:fillViewport="false"
         android:requiresFadingEdge="vertical" >
 
+        <!-- The layout resource for this ViewStub is NOT set here — it is injected at runtime.
+             - When INCOGNITO_NTP_REVAMP flag is DISABLED: inflates @layout/incognito_description_layout
+               (root view: LegacyIncognitoDescriptionView)
+             - When INCOGNITO_NTP_REVAMP flag is ENABLED:  inflates @layout/revamped_incognito_description_layout
+               (root view: RevampedIncognitoDescriptionView)
+             Both files are intentionally retained. Do NOT remove either without removing the other. -->
         <ViewStub
             android:id="@+id/incognito_description_layout_stub"
             android:layout_width="match_parent"

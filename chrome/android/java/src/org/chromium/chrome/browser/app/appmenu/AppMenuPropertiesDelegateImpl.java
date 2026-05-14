@@ -107,7 +107,6 @@ import android.util.Base64;
 import android.util.Base64InputStream;
 import androidx.appcompat.view.menu.MenuBuilder;
 import org.chromium.chrome.browser.AppMenuBridge;
-import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.content_public.browser.WebContents;
 
 import org.chromium.components.browser_ui.site_settings.SiteSettingsCategory;
@@ -116,7 +115,6 @@ import org.chromium.components.browser_ui.site_settings.WebsitePreferenceBridgeJ
 import org.chromium.components.content_settings.ContentSettingsType;
 import org.chromium.components.content_settings.ContentSettingValues;
 
-import org.chromium.chrome.browser.AppMenuBridge;
 import org.chromium.base.Log;
 
 import android.graphics.Color;
@@ -524,7 +522,13 @@ public class AppMenuPropertiesDelegateImpl implements AppMenuPropertiesDelegate 
                 byte[] decodedString = Base64.decode(cleanImage, Base64.DEFAULT);
                 Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
 
-                newlyAdded.setIcon(new BitmapDrawable(mContext.getResources(), decodedByte));
+                // Guard against null: BitmapFactory returns null for malformed or empty icon data.
+                // Fall back to the generic default icon so the menu item remains tappable.
+                if (decodedByte != null) {
+                    newlyAdded.setIcon(new BitmapDrawable(mContext.getResources(), decodedByte));
+                } else {
+                    newlyAdded.setIcon(AppCompatResources.getDrawable(mContext, R.drawable.ic_extension_24dp));
+                }
 
                 boolean isIncognitoEnabled = false;
                 if (extensionsInfo[4].equals("active"))
@@ -1144,60 +1148,60 @@ public class AppMenuPropertiesDelegateImpl implements AppMenuPropertiesDelegate 
         boolean isTranslateVisible = currentTab != null && shouldShowTranslateMenuItem(currentTab);
         if (menu.findItem(R.id.translate_id) != null)
         menu.findItem(R.id.translate_id).setVisible(isTranslateVisible);
-        if (currentTab == null || currentTab.getUrl() == null) return ;
+        if (currentTab == null || currentTab.getUrl() == null) return;
         String url = currentTab.getUrl().getSpec();
-            MenuItem translate_menu = menu.findItem(R.id.translate_id);
-            if (translate_menu != null) {
-                   try {
-                       if (url != null
-                        &&
-                          (
-                            url.contains("www.microsofttranslator.com/bv.aspx")
-                        ||  url.contains("translatetheweb.com")
-                        ||  url.contains("translatetheweb.net")
-                        ||  url.contains("translatetheweb-int.net")
-                        ||  url.contains("translatoruser.com")
-                        ||  url.contains("translatoruser.net")
-                          )
-                        ) {
-                           translate_menu.setTitle(R.string.main_menu_translate_undo);
-                       } else {
-                           translate_menu.setTitle(R.string.menu_translate);
-                       }
-                       if (url != null
-                        &&
-                          (
-                            url.startsWith("https://translate.google.com/")
-                        ||  url.startsWith("https://translate.googleusercontent.com/")
-                        ||  url.startsWith("http://translate.google.com/")
-                        ||  url.startsWith("http://translate.googleusercontent.com/")
-                        ||  url.contains(".translate.goog/")
-                          )
-                        ) {
-                           translate_menu.setTitle(R.string.main_menu_translate_undo);
-                       }
-                       if (url != null
-                        &&
-                          (
-                            url.startsWith("https://fanyi.baidu.com/")
-                        ||  url.startsWith("http://fanyi.baidu.com/")
-                          )
-                        ) {
-                           translate_menu.setTitle(R.string.main_menu_translate_undo);
-                       }
-                       if (url != null
-                        &&
-                          (
-                            url.startsWith("https://translate.yandex.com/")
-                        ||  url.startsWith("http://translate.yandex.com/")
-                          )
-                        ) {
-                           translate_menu.setTitle(R.string.main_menu_translate_undo);
-                       }
-                   } catch (Exception e) {
-                       translate_menu.setTitle(R.string.menu_translate);
-                   }
+        MenuItem translate_menu = menu.findItem(R.id.translate_id);
+        if (translate_menu != null) {
+            try {
+                if (isAlreadyTranslatedUrl(url)) {
+                    translate_menu.setTitle(R.string.main_menu_translate_undo);
+                } else {
+                    translate_menu.setTitle(R.string.menu_translate);
+                }
+            } catch (Exception e) {
+                translate_menu.setTitle(R.string.menu_translate);
             }
+        }
+    }
+
+    /**
+     * Returns true if {@code url} is a page that has already been translated by one of the
+     * supported external translators (Google, Yandex, Baidu, Microsoft). Used by both
+     * {@link #prepareTranslateMenuItem} (to set the menu label) and by ChromeActivity's
+     * translate action handler (to decide whether to undo a translation).
+     *
+     * <p>Keep all translator URL patterns in this single place to avoid divergence.
+     */
+    static boolean isAlreadyTranslatedUrl(String url) {
+        if (url == null) return false;
+        // Google Translate
+        if (url.startsWith("https://translate.google.com/")
+                || url.startsWith("https://translate.googleusercontent.com/")
+                || url.startsWith("http://translate.google.com/")
+                || url.startsWith("http://translate.googleusercontent.com/")
+                || url.contains(".translate.goog/")) {
+            return true;
+        }
+        // Yandex Translate
+        if (url.startsWith("https://translate.yandex.com/")
+                || url.startsWith("http://translate.yandex.com/")) {
+            return true;
+        }
+        // Baidu Translate
+        if (url.startsWith("https://fanyi.baidu.com/")
+                || url.startsWith("http://fanyi.baidu.com/")) {
+            return true;
+        }
+        // Microsoft Translate
+        if (url.contains("www.microsofttranslator.com/bv.aspx")
+                || url.contains("translatetheweb.com")
+                || url.contains("translatetheweb.net")
+                || url.contains("translatetheweb-int.net")
+                || url.contains("translatoruser.com")
+                || url.contains("translatoruser.net")) {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -1504,7 +1508,6 @@ public class AppMenuPropertiesDelegateImpl implements AppMenuPropertiesDelegate 
         // Hide app menu item if on non-NTP chrome:// page or auto dark not enabled.
         boolean isAutoDarkEnabled = isAutoDarkWebContentsEnabled();
         boolean itemVisible = currentTab != null && !isChromeScheme && isAutoDarkEnabled;
-        itemVisible = false;
         if (autoDarkMenuRow != null)
             autoDarkMenuRow.setVisible(itemVisible);
         if (!itemVisible) return;

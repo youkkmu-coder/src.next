@@ -114,4 +114,22 @@
 
     <string name="accessibility_preferences_cws_mobile_friendly_title">Optimize Extensions Web Store</string>
     <string name="accessibility_preferences_cws_mobile_friendly_summary">Improve the appearance of Extensions Web Store</string>
+
+    <!-- ── Kiwi Phase 4: Address Bar Position ─────────────────────────── -->
+    <string name="kiwi_address_bar_position_title">Address bar position</string>
+    <string name="kiwi_address_bar_position_bottom">Bottom (default)</string>
+    <string name="kiwi_address_bar_position_top">Top</string>
+    <!-- Summary shown in the Settings main page under the preference entry -->
+    <string name="kiwi_address_bar_position_summary">Choose where the address bar appears</string>
+
+    <!-- String arrays for the ListPreference entries/entryValues -->
+    <string-array name="kiwi_address_bar_position_entries">
+        <item>@string/kiwi_address_bar_position_bottom</item>
+        <item>@string/kiwi_address_bar_position_top</item>
+    </string-array>
+    <string-array name="kiwi_address_bar_position_values">
+        <item>bottom</item>
+        <item>top</item>
+    </string-array>
+
 </resources>

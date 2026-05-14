@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kiwi Phase 3 — Slim Bottom Navigation Bar.
+
+  Layout: back | forward | [flexible space] | tabs | menu
+  Height: 48dp (touch-friendly minimum, smaller than default 56dp toolbar)
+  Background: kiwi_bg_toolbar (#1A1A1A) via ThemeOverlay.Kiwi.Toolbar
+  Separator: 1dp kiwi_toolbar_border hairline at top
+
+  This layout is inflated into the bottom_container_slot FrameLayout
+  inside bottom_control_container.xml. It does NOT replace the
+  ScrollingBottomViewResourceFrameLayout — it fills the slot inside it.
+
+  Button IDs must match what ChromeActivity.java and ToolbarManager.java
+  expect for back/forward/tab-switcher/menu dispatch:
+    back      → android.R.id is not used; we rely on OnClickListener set by ToolbarManager
+    forward   → same
+    tabs      → @+id/kiwi_bottom_tab_switcher  (distinct from top @id/tab_switcher_button)
+    menu      → @+id/kiwi_bottom_menu_button   (distinct from top @id/menu_button)
+
+  Accessibility: each button has a contentDescription. The tab count badge
+  TextView (@+id/kiwi_bottom_tab_count) is updated by KiwiBottomNavController.java.
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/kiwi_bottom_nav"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@color/kiwi_bg_toolbar"
+    android:theme="@style/ThemeOverlay.Kiwi.Toolbar"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp" >
+
+    <!-- ── Back ─────────────────────────────────────────────────────── -->
+    <org.chromium.ui.widget.ChromeImageButton
+        android:id="@+id/kiwi_bottom_back"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:src="@drawable/btn_back"
+        android:contentDescription="@string/back"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:enabled="false"
+        app:tint="@color/kiwi_icon_primary"
+        tools:ignore="ContentDescription" />
+
+    <!-- ── Forward ──────────────────────────────────────────────────── -->
+    <org.chromium.ui.widget.ChromeImageButton
+        android:id="@+id/kiwi_bottom_forward"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:src="@drawable/btn_forward"
+        android:contentDescription="@string/forward"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:enabled="false"
+        app:tint="@color/kiwi_icon_primary"
+        tools:ignore="ContentDescription" />
+
+    <!-- ── Flexible spacer — pushes tabs+menu to the right ──────────── -->
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2" />
+
+    <!-- ── Tab Switcher ──────────────────────────────────────────────── -->
+    <!--
+      Uses a FrameLayout so the badge TextView can overlay the icon.
+      The badge is updated by KiwiBottomNavController from TabCountProvider.
+    -->
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1">
+
+        <org.chromium.ui.widget.ChromeImageButton
+            android:id="@+id/kiwi_bottom_tab_switcher"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/btn_tabswitcher_modern"
+            android:contentDescription="@string/accessibility_toolbar_btn_tabswitcher_toggle_default"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/kiwi_icon_primary" />
+
+        <!-- Tab count badge — hidden when tab count = 1 -->
+        <TextView
+            android:id="@+id/kiwi_bottom_tab_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="2dp"
+            android:textColor="@color/kiwi_text_primary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:importantForAccessibility="no"
+            tools:text="3" />
+
+    </FrameLayout>
+
+    <!-- ── Menu (3-dot) ──────────────────────────────────────────────── -->
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1">
+
+        <org.chromium.ui.widget.ChromeImageButton
+            android:id="@+id/kiwi_bottom_menu_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_more_vert_24dp"
+            android:contentDescription="@string/accessibility_toolbar_btn_menu"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/kiwi_icon_primary" />
+
+        <!-- Update badge overlay — shown when browser update available -->
+        <ImageView
+            android:id="@+id/kiwi_bottom_menu_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:src="@drawable/badge_update_dark"
+            android:visibility="invisible"
+            android:importantForAccessibility="no"
+            tools:ignore="ContentDescription" />
+
+    </FrameLayout>
+
+</LinearLayout>

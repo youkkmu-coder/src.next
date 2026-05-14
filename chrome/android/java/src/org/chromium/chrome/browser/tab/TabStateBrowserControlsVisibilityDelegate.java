@@ -195,15 +195,23 @@ public class TabStateBrowserControlsVisibilityDelegate
         enableHidingBrowserControls &= !ChromeAccessibilityUtil.get().isAccessibilityEnabled();
         enableHidingBrowserControls &= DeviceClassManager.enableFullscreen();
 
-        String KeepToolbarSetting = ContextUtils.getAppSharedPreferences().getString("keep_toolbar_visible_configuration", "unknown");
-        if (KeepToolbarSetting.equals("unknown")) {
-          if (ChromeAccessibilityUtil.get().isAccessibilityEnabled())
-            enableHidingBrowserControls &= false;
-          else
-            enableHidingBrowserControls &= true;
-        } else if (KeepToolbarSetting.equals("on")) {
+        // Kiwi Phase 2 — Auto-hide behaviour:
+        // "keep_toolbar_visible_configuration" values:
+        //   "unknown"  → new install default: auto-hide enabled (threshold-based, native compositor)
+        //   "on"       → user explicitly pinned toolbar always-visible
+        //   "off"      → user explicitly enabled auto-hide
+        //   (anything else is treated as "off" / auto-hide)
+        //
+        // The native Chromium compositor drives the actual hide/show animation whenever
+        // BrowserControlsState.BOTH is returned — no extra scroll listener is needed.
+        String KeepToolbarSetting = ContextUtils.getAppSharedPreferences().getString(
+                "keep_toolbar_visible_configuration", "unknown");
+        if (KeepToolbarSetting.equals("on")) {
+            // User has pinned the toolbar — disable hiding.
             enableHidingBrowserControls &= false;
         } else {
+            // Default (unknown) and explicit "off": allow auto-hide.
+            // Accessibility override still applies from the check above (line 195).
             enableHidingBrowserControls &= true;
         }
 

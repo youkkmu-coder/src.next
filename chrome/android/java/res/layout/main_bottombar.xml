@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kiwi Phase 4 — Root activity layout with bottom controls stub active.
+
+  This is the layout used when enable_bottom_toolbar=true (the Phase 3+ default).
+  It is identical to Chromium's upstream main.xml but with the bottom_controls_stub
+  ViewStub present so ToolbarManager.enableBottomControls() can inflate it.
+
+  Required IDs (referenced by Java code):
+    compositor_view_holder   — CompositorViewHolder (the WebContents canvas)
+    bottom_container         — BottomContainer (snackbar host, keyboard accessory)
+    control_container_stub   — ViewStub inflated by ChromeActivity for the top toolbar
+    omnibox_results_container_stub — ViewStub for omnibox suggestions overlay
+    bottom_controls_stub     — ViewStub inflated by ToolbarManager.enableBottomControls()
+
+  Layout structure (bottom-to-top in z-order):
+    1. CompositorViewHolder  — full-screen web content
+    2. BottomContainer       — snackbar + accessory sheet anchored at bottom
+    3. control_container_stub — top toolbar (inflated at runtime)
+    4. omnibox_results_container_stub — omnibox suggestions overlay
+    5. bottom_controls_stub  — bottom bar container (inflated at runtime)
+-->
+<org.chromium.chrome.browser.ui.RootView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/coordinator"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <!-- ── Web content canvas ─────────────────────────────────────────── -->
+    <include layout="@layout/compositor_view_holder" />
+
+    <!-- ── Bottom anchor container (snackbar, keyboard accessory) ──────── -->
+    <org.chromium.chrome.browser.ui.BottomContainer
+        android:id="@+id/bottom_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom" />
+
+    <!-- ── Top toolbar ViewStub ─────────────────────────────────────────── -->
+    <!--
+      Inflated at runtime by ChromeActivity.doLayoutInflation() using
+      getControlContainerLayoutId() → R.layout.control_container.
+    -->
+    <ViewStub
+        android:id="@+id/control_container_stub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top" />
+
+    <!-- ── Omnibox results overlay ViewStub ─────────────────────────────── -->
+    <ViewStub
+        android:id="@+id/omnibox_results_container_stub"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- ── Bottom controls ViewStub ──────────────────────────────────────── -->
+    <!--
+      Inflated by ToolbarManager.enableBottomControls().
+      The inflated layout is bottom_control_container.xml
+      (org.chromium.chrome.browser.toolbar.bottom.ScrollingBottomViewResourceFrameLayout).
+      After inflation the Kiwi slim nav bar (kiwi_bottom_nav.xml) is added
+      into @id/bottom_container_slot inside it.
+    -->
+    <ViewStub
+        android:id="@+id/bottom_controls_stub"
+        android:inflatedId="@+id/bottom_controls"
+        android:layout="@layout/bottom_control_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom" />
+
+</org.chromium.chrome.browser.ui.RootView>

@@ -19,11 +19,11 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="4dp" />
+            android:layout_height="@dimen/sheet_tab_toolbar_top_spacer_height" />
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="@dimen/sheet_tab_toolbar_content_height"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:orientation="horizontal">
@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_toStartOf="@id/open_in_new_tab"
+                android:layout_toStartOf="@id/close"
                 android:layout_toEndOf="@id/favicon"
                 android:textAlignment="viewStart"
                 android:ellipsize="end"
@@ -106,7 +106,7 @@
                 android:id="@+id/origin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/open_in_new_tab"
+                android:layout_toStartOf="@id/close"
                 android:layout_toEndOf="@id/security_icon"
                 android:layout_below="@id/title"
                 android:layout_marginStart="4dp"
@@ -119,7 +119,7 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="2dp" />
+            android:layout_height="@dimen/sheet_tab_toolbar_divider_height" />
 
         <ProgressBar
             android:id="@+id/progress_bar"

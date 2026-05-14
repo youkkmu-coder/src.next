@@ -87,6 +87,10 @@
 
     <!-- Sheet tab toolbar dimensions -->
     <dimen name="sheet_tab_toolbar_height">70dp</dimen>
+    <!-- Content area height = toolbar_height minus top spacer (4dp), divider (2dp), progress bar (2dp) -->
+    <dimen name="sheet_tab_toolbar_content_height">62dp</dimen>
+    <dimen name="sheet_tab_toolbar_top_spacer_height">4dp</dimen>
+    <dimen name="sheet_tab_toolbar_divider_height">2dp</dimen>
 
     <!-- Autofill keyboard accessory dimensions -->
     <dimen name="keyboard_accessory_height_with_shadow">48dp</dimen>

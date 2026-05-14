@@ -2,12 +2,18 @@
 <!-- Copyright 2015 The Chromium Authors. All rights reserved.
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
+<!--
+  Kiwi Phase 2: Top control container.
+  - toolbar_hairline gradient replaced with a flat 1dp monochrome border.
+  - Root background set to kiwi_bg_toolbar (#1A1A1A).
+-->
 <org.chromium.chrome.browser.toolbar.top.ToolbarControlContainer
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/control_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="@dimen/control_container_height" >
+    android:minHeight="@dimen/control_container_height"
+    android:background="@color/kiwi_bg_toolbar" >
 
     <view
         class="org.chromium.chrome.browser.toolbar.top.ToolbarControlContainer$ToolbarViewResourceFrameLayout"
@@ -21,13 +27,13 @@
             android:layout_marginTop="@dimen/tab_strip_height"
             android:layout_height="@dimen/toolbar_height_no_shadow" />
 
-        <ImageView
+        <!-- Kiwi: flat 1dp hairline replaces the old gradient drop-shadow -->
+        <View
             android:id="@+id/toolbar_hairline"
-            android:src="@drawable/toolbar_hairline"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="1dp"
             android:layout_marginTop="@dimen/tab_strip_and_toolbar_height"
-            android:scaleType="fitXY"
+            android:background="@color/kiwi_toolbar_border"
             android:importantForAccessibility="no" />
 
         <ViewStub

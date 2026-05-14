@@ -79,7 +79,7 @@
         android:id="@+id/action_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="42dp"
+        android:layout_toStartOf="@id/menu_button_wrapper"
         android:layout_gravity="center_vertical|end"
         android:gravity="center_vertical"
         android:orientation="horizontal" />

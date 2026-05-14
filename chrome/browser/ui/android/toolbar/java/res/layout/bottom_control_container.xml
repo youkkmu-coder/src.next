@@ -3,11 +3,18 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
+<!--
+  Kiwi Phase 2: Bottom control container.
+  - Gradient drop-shadow replaced with a flat 1dp monochrome hairline.
+  - ThemeOverlay.Kiwi.Toolbar applied so all child views inherit the dark surface.
+-->
 <org.chromium.chrome.browser.toolbar.bottom.ScrollingBottomViewResourceFrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content" >
+    android:layout_height="wrap_content"
+    android:background="@color/kiwi_bg_toolbar"
+    android:theme="@style/ThemeOverlay.Kiwi.Toolbar" >
 
     <LinearLayout
         android:orientation="vertical"
@@ -15,13 +22,12 @@
         android:id="@+id/bottom_controls_wrapper"
         android:layout_height="wrap_content" >
 
-        <ImageView
+        <!-- Kiwi: flat 1dp hairline replaces the old gradient drop-shadow -->
+        <View
             android:id="@+id/bottom_container_top_shadow"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/toolbar_shadow_height"
-            android:src="@drawable/modern_toolbar_shadow"
-            android:scaleType="fitXY"
-            android:scaleY="-1"
+            android:layout_height="1dp"
+            android:background="@color/kiwi_toolbar_border"
             tools:ignore="ContentDescription" />
 
         <FrameLayout

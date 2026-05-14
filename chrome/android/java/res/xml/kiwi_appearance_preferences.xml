@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kiwi Phase 4 — Address bar position preference screen.
+  Fragment: KiwiAppearanceSettings.java
+  Entry point: Settings > Appearance > Address bar position
+
+  Contains:
+    1. address_bar_position — ListPreference with Top / Bottom options
+    2. enable_bottom_toolbar — SwitchPreference (visible/hidden based on address_bar_position)
+-->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!--
+      Address bar position radio group.
+      Key: "address_bar_position"
+      Values: "bottom" (default) | "top"
+      When changed to "top"  → enable_bottom_toolbar=false, activity recreates.
+      When changed to "bottom" → enable_bottom_toolbar=true, activity recreates.
+    -->
+    <ListPreference
+        android:key="address_bar_position"
+        android:title="@string/kiwi_address_bar_position_title"
+        android:summary="%s"
+        android:defaultValue="bottom"
+        android:entries="@array/kiwi_address_bar_position_entries"
+        android:entryValues="@array/kiwi_address_bar_position_values"
+        android:dialogTitle="@string/kiwi_address_bar_position_title"
+        android:persistent="true" />
+
+</PreferenceScreen>

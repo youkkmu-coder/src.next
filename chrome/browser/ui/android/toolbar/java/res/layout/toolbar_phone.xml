@@ -11,7 +11,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/toolbar"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/toolbar_height_no_shadow" >
+    android:layout_height="@dimen/toolbar_height_no_shadow"
+    android:background="@color/kiwi_bg_toolbar"
+    android:theme="@style/ThemeOverlay.Kiwi.Toolbar" >
 
     <org.chromium.chrome.browser.toolbar.HomeButton
         android:id="@+id/home_button"
@@ -22,7 +24,7 @@
         app:menuVerticalOverlapAnchor="false"
         app:menuMaxWidth="@dimen/home_button_list_menu_width"
         app:menuPositionedAtEnd="false"
-        app:tint="@color/default_icon_color_tint_list" />
+        app:tint="@color/kiwi_icon_secondary" />
 
     <org.chromium.chrome.browser.omnibox.LocationBarPhone
         android:id="@+id/location_bar"
@@ -60,7 +62,8 @@
             android:layout_gravity="top"
             android:contentDescription="@string/accessibility_toolbar_btn_tabswitcher_toggle_default"
             app:menuMaxWidth="@dimen/tab_switcher_menu_width"
-            app:menuVerticalOverlapAnchor="false" />
+            app:menuVerticalOverlapAnchor="false"
+            app:tint="@color/kiwi_icon_primary" />
 
         <include layout="@layout/menu_button"/>
 

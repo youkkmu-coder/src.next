@@ -163,6 +163,13 @@
         <item android:id="@+id/developer_tools_id"
             android:title="@string/main_menu_developer_tools"
             android:icon="@drawable/ic_devtools" />
+        <item android:id="@+id/disable_proxy_id"
+            android:title="@string/main_menu_disable_proxy"
+            android:icon="@drawable/safetytip_shield"
+            android:visible="false" />
+        <item android:id="@+id/clear_data_menu_id"
+            android:title="@string/main_menu_clear_data"
+            android:icon="@drawable/ic_clear_data" />
         <item android:id="@+id/preferences_id"
             android:title="@string/menu_settings"
             android:icon="@drawable/settings_cog" />
@@ -177,6 +184,9 @@
         <item android:id="@+id/managed_by_menu_id"
             android:title="@string/managed_browser"
             android:icon="@drawable/ic_business" />
+        <item android:id="@+id/exit_id"
+            android:title="@string/main_menu_exit"
+            android:icon="@drawable/ic_exit_to_app_white_24dp" />
     </group>
 
     <!-- Items shown only in the tab switcher -->

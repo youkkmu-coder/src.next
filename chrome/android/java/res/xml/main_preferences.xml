@@ -111,6 +111,15 @@
         android:icon="@drawable/ics_toolbar_shortcut"
         android:title="@string/preferences_toolbar"
         app:iconTint="@color/default_icon_color_tint_list"/>
+    <!-- Kiwi Phase 4: Address bar position (Top / Bottom) -->
+    <org.chromium.components.browser_ui.settings.ChromeBasePreference
+        android:fragment="org.chromium.chrome.browser.settings.KiwiAppearanceSettings"
+        android:key="kiwi_appearance"
+        android:order="11"
+        android:icon="@drawable/ics_toolbar_shortcut"
+        android:title="@string/kiwi_address_bar_position_title"
+        android:summary="@string/kiwi_address_bar_position_summary"
+        app:iconTint="@color/default_icon_color_tint_list"/>
     <Preference
         android:fragment="org.chromium.chrome.browser.toolbar.adaptive.settings.AdaptiveToolbarPreferenceFragment"
         android:key="toolbar_shortcut"

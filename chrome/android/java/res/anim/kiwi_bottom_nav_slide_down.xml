@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kiwi Phase 3 — slide-down animation for the bottom navigation bar.
+  Used when hiding the bar after user scrolls down.
+  Paired with kiwi_bottom_nav_slide_up.xml for show.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/accelerate_interpolator">
+
+    <translate
+        android:fromYDelta="0%p"
+        android:toYDelta="100%p"
+        android:duration="180" />
+
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0"
+        android:duration="140" />
+
+</set>

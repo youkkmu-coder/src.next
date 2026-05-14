@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kiwi Phase 3 — slide-up animation for the bottom navigation bar.
+  Duration: 220ms with decelerate interpolation for a natural snap-in feel.
+  Paired with kiwi_slide_down.xml for hide.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/decelerate_interpolator">
+
+    <translate
+        android:fromYDelta="100%p"
+        android:toYDelta="0%p"
+        android:duration="220" />
+
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="180"
+        android:startOffset="40" />
+
+</set>

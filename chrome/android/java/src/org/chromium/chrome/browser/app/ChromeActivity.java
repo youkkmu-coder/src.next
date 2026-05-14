@@ -761,7 +761,9 @@ public abstract class ChromeActivity<C extends ChromeActivityComponent>
             try (StrictModeContext ignored = StrictModeContext.allowDiskWrites()) {
                 SharedPreferencesManager.getInstance().writeBooleanUnchecked("is_tablet", DeviceFormFactor.isTablet());
                 TraceEvent.begin("setContentView(R.layout.main)");
-                if (ContextUtils.getAppSharedPreferences().getBoolean("enable_bottom_toolbar", false)) {
+                // Kiwi Phase 3: bottom bar is ON by default.
+                // The pref can be set to false by the user to revert to the top-only layout.
+                if (ContextUtils.getAppSharedPreferences().getBoolean("enable_bottom_toolbar", true)) {
                     setContentView(R.layout.main_bottombar);
                 } else {
                     setContentView(R.layout.main);
@@ -2585,94 +2587,62 @@ public abstract class ChromeActivity<C extends ChromeActivityComponent>
                 boolean hasTranslated = false;
 
               if (ContextUtils.getAppSharedPreferences().getString("active_translator", "").equals("Google")) {
-                hasTranslated = false;
-                try {
-                   if (url != null
-                     &&
-                      (
-                            url.startsWith("https://translate.google.com/")
-                        ||  url.startsWith("https://translate.googleusercontent.com/")
-                        ||  url.startsWith("http://translate.google.com/")
-                        ||  url.startsWith("http://translate.googleusercontent.com/")
-                        ||  url.contains(".translate.goog/")
-                     )
-                    ) {
-                       Uri uri = Uri.parse(url);
-                       String paramValue = uri.getQueryParameter("u");
-                       LoadUrlParams loadUrlParams = new LoadUrlParams(paramValue);
-                       currentTab.loadUrl(loadUrlParams);
-                       hasTranslated = true;
-                   }
-                } catch (Exception e) {
+                // Reuse shared detection so patterns stay in sync with the menu label logic.
+                if (AppMenuPropertiesDelegateImpl.isAlreadyTranslatedUrl(url)) {
+                    try {
+                        Uri uri = Uri.parse(url);
+                        String paramValue = uri.getQueryParameter("u");
+                        LoadUrlParams loadUrlParams = new LoadUrlParams(paramValue);
+                        currentTab.loadUrl(loadUrlParams);
+                        hasTranslated = true;
+                    } catch (Exception e) {
+                    }
                 }
                 if (!hasTranslated) {
                     LoadUrlParams loadUrlParams = new LoadUrlParams("http://translate.google.com/translate?sl=auto&tl=auto&u=" + Uri.encode(url));
                     currentTab.loadUrl(loadUrlParams);
                 }
               } else if (ContextUtils.getAppSharedPreferences().getString("active_translator", "").equals("Yandex")) {
-                hasTranslated = false;
-                try {
-                   if (url != null
-                     &&
-                      (
-                            url.startsWith("https://translate.yandex.com/")
-                        ||  url.startsWith("http://translate.yandex.com/")
-                     )
-                    ) {
-                       Uri uri = Uri.parse(url);
-                       String paramValue = uri.getQueryParameter("u");
-                       LoadUrlParams loadUrlParams = new LoadUrlParams(paramValue);
-                       currentTab.loadUrl(loadUrlParams);
-                       hasTranslated = true;
-                   }
-                } catch (Exception e) {
+                if (AppMenuPropertiesDelegateImpl.isAlreadyTranslatedUrl(url)) {
+                    try {
+                        Uri uri = Uri.parse(url);
+                        String paramValue = uri.getQueryParameter("u");
+                        LoadUrlParams loadUrlParams = new LoadUrlParams(paramValue);
+                        currentTab.loadUrl(loadUrlParams);
+                        hasTranslated = true;
+                    } catch (Exception e) {
+                    }
                 }
                 if (!hasTranslated) {
                     LoadUrlParams loadUrlParams = new LoadUrlParams("https://translate.yandex.com/?text=" + Uri.encode(url));
                     currentTab.loadUrl(loadUrlParams);
                 }
               } else if (ContextUtils.getAppSharedPreferences().getString("active_translator", "").equals("Baidu")) {
-                hasTranslated = false;
-                try {
-                   if (url != null
-                     &&
-                      (
-                            url.startsWith("https://fanyi.baidu.com/")
-                        ||  url.startsWith("http://fanyi.baidu.com/")
-                     )
-                    ) {
-                       Uri uri = Uri.parse(url);
-                       String paramValue = uri.getQueryParameter("query");
-                       LoadUrlParams loadUrlParams = new LoadUrlParams(paramValue);
-                       currentTab.loadUrl(loadUrlParams);
-                       hasTranslated = true;
-                   }
-                } catch (Exception e) {
+                if (AppMenuPropertiesDelegateImpl.isAlreadyTranslatedUrl(url)) {
+                    try {
+                        Uri uri = Uri.parse(url);
+                        String paramValue = uri.getQueryParameter("query");
+                        LoadUrlParams loadUrlParams = new LoadUrlParams(paramValue);
+                        currentTab.loadUrl(loadUrlParams);
+                        hasTranslated = true;
+                    } catch (Exception e) {
+                    }
                 }
                 if (!hasTranslated) {
                     LoadUrlParams loadUrlParams = new LoadUrlParams("http://fanyi.baidu.com/transpage?source=url&ie=utf8&from=auto&to=zh&render=1&query=" + Uri.encode(url));
                     currentTab.loadUrl(loadUrlParams);
                 }
               } else {
-                try {
-                   if (url != null
-                     &&
-                      (
-                          url.contains("www.microsofttranslator.com/bv.aspx")
-                       || url.contains("translatetheweb.com")
-                       || url.contains("translatetheweb.net")
-                       || url.contains("translatetheweb-int.net")
-                       || url.contains("translatoruser.com")
-                       || url.contains("translatoruser.net")
-                     )
-                    ) {
-                       Uri uri = Uri.parse(url);
-                       String paramValue = uri.getQueryParameter("a");
-                       LoadUrlParams loadUrlParams = new LoadUrlParams(paramValue);
-                       currentTab.loadUrl(loadUrlParams);
-                       hasTranslated = true;
-                   }
-                } catch (Exception e) {
+                // Microsoft Translate
+                if (AppMenuPropertiesDelegateImpl.isAlreadyTranslatedUrl(url)) {
+                    try {
+                        Uri uri = Uri.parse(url);
+                        String paramValue = uri.getQueryParameter("a");
+                        LoadUrlParams loadUrlParams = new LoadUrlParams(paramValue);
+                        currentTab.loadUrl(loadUrlParams);
+                        hasTranslated = true;
+                    } catch (Exception e) {
+                    }
                 }
                 if (!hasTranslated) {
                     LoadUrlParams loadUrlParams = new LoadUrlParams("http://www.microsofttranslator.com/bv.aspx?r=true&a=" + Uri.encode(url));
@@ -2754,14 +2724,17 @@ public abstract class ChromeActivity<C extends ChromeActivityComponent>
             currentTab.stopLoading();
             currentTab.reload();
             RecordUserAction.record("MobileMenuSwitchAdblock");
+            return true;
         }
 
         if (id == R.id.developer_tools_id) {
             AppMenuBridge.openDevTools(currentTab.getWebContents());
+            return true;
         }
 
         if (id == R.id.disable_proxy_id) {
             AppMenuBridge.disableProxy(Profile.fromWebContents(currentTab.getWebContents()).getOriginalProfile());
+            return true;
         }
 
         if (id == R.id.auto_dark_web_contents_id || id == R.id.auto_dark_web_contents_check_id) {
@@ -2779,7 +2752,6 @@ public abstract class ChromeActivity<C extends ChromeActivityComponent>
 
             // Show dialog informing user how to disable the feature globally and give feedback if
             // disabling through the app menu for the nth time (determined by feature engagement).
-            if (false)
             if (isEnabled) {
                 WebContentsDarkModeMessageController.attemptToShowDialog(this, profile,
                         url.getSpec(), getModalDialogManager(), new SettingsLauncherImpl(),
@@ -2822,6 +2794,7 @@ public abstract class ChromeActivity<C extends ChromeActivityComponent>
             WebsitePreferenceBridge.setContentSettingEnabled(
                     Profile.getLastUsedRegularProfile(), ContentSettingsType.AUTO_DARK_WEB_CONTENT, ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false));
             currentTab.getWebContents().notifyRendererPreferenceUpdate();
+            return true;
         }
 
         if (id == R.id.extensions_id) {
@@ -2829,7 +2802,7 @@ public abstract class ChromeActivity<C extends ChromeActivityComponent>
             TabCreator tabCreator = getTabCreator(currentTab.isIncognito());
             if (currentTab != null && tabCreator != null) {
               tabCreator.createNewTab(
-                      new LoadUrlParams("chrome://extensions", PageTransition.LINK),
+                      new LoadUrlParams("chrome://extensions", PageTransition.AUTO_TOPLEVEL),
                       TabLaunchType.FROM_CHROME_UI, getActivityTab());
             }
         }

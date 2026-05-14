@@ -29,7 +29,39 @@
         parent="Base.Theme.Chromium.WithWindowAnimation" />
 
     <!-- Activity themes -->
-    <style name="Theme.Chromium.Activity" parent="Theme.Chromium.WithWindowAnimation" />
+    <!--
+      Kiwi Monochrome: All browsing activities inherit these values.
+      forceDarkAllowed=false locks the UI in dark mode regardless of system setting.
+      The monochrome palette from kiwi_monochrome_colors.xml is applied here at root.
+    -->
+    <style name="Theme.Chromium.Activity" parent="Theme.Chromium.WithWindowAnimation">
+        <!-- Always-dark: disable Android's auto-dark algorithm entirely -->
+        <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
+        <!-- Window canvas — deepest black -->
+        <item name="android:windowBackground">@color/kiwi_bg_primary</item>
+        <!-- Status bar (top system icons) -->
+        <item name="android:statusBarColor" tools:targetApi="21">@color/kiwi_status_bar</item>
+        <!-- Navigation bar (bottom system buttons) -->
+        <item name="android:navigationBarColor" tools:targetApi="21">@color/kiwi_nav_bar</item>
+        <!-- Light icons on status bar = false → use white icons -->
+        <item name="android:windowLightStatusBar" tools:targetApi="23">false</item>
+        <!-- Light icons on nav bar = false → use white icons -->
+        <item name="android:windowLightNavigationBar" tools:targetApi="28">false</item>
+        <!-- Material colorPrimary (used by coloured AppBars, ripples baseline) -->
+        <item name="colorPrimary">@color/kiwi_bg_toolbar</item>
+        <!-- Surface color for Material components (BottomSheetDialog, dialogs) -->
+        <item name="colorSurface">@color/kiwi_bg_elevated</item>
+        <!-- Background color for Material widgets -->
+        <item name="android:colorBackground">@color/kiwi_bg_primary</item>
+        <!-- Ripple/touch feedback -->
+        <item name="colorControlHighlight">@color/kiwi_ripple</item>
+        <!-- Accent (checked states, sliders) —  monochrome white -->
+        <item name="colorAccent">@color/kiwi_accent</item>
+        <!-- Primary text on dark background -->
+        <item name="android:textColorPrimary">@color/kiwi_text_primary</item>
+        <!-- Secondary text -->
+        <item name="android:textColorSecondary">@color/kiwi_text_secondary</item>
+    </style>
     <!-- This is distinct from Theme.Chromium.Activity.Fullscreen.Transparent, which makes the
          payment handler window overlap the bottom nav bar. -->
     <style name="Base.Theme.Chromium.Activity.Fullscreen" parent="Theme.BrowserUI.DayNight" />
@@ -75,7 +107,13 @@
 
         <!-- Text style attributes used by the preference_material.xml layout. -->
         <item name="android:textAppearanceListItem">@style/TextAppearance.TextLarge.Primary</item>
-        <item name="android:textColorSecondary">@color/default_text_color_secondary_list</item>
+        <item name="android:textColorSecondary">@color/kiwi_text_secondary</item>
+
+        <!-- Kiwi monochrome: Settings screens always use the dark surface -->
+        <item name="android:windowBackground">@color/kiwi_settings_bg</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
+        <item name="colorSurface">@color/kiwi_settings_item_bg</item>
+        <item name="android:colorBackground">@color/kiwi_settings_bg</item>
     </style>
     <style name="Base.V27.Theme.Chromium.Settings" parent="Base.Theme.Chromium.Settings" />
     <style name="Theme.Chromium.Settings" parent="Base.V27.Theme.Chromium.Settings" />
@@ -443,4 +481,53 @@
     <style name="NotificationBlockedDialogContent" parent="AlertDialogContent">
         <item name="android:paddingBottom">12dp</item>
     </style>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         Kiwi Monochrome — Component Theme Overlays
+         Apply these as app:theme or android:theme on individual Views
+         when the component sits inside a host that can't inherit the
+         root activity theme (e.g. PopupWindow, BottomSheetDialog).
+         ════════════════════════════════════════════════════════════════ -->
+
+    <!-- Overlay for the app overflow menu popup -->
+    <style name="ThemeOverlay.Kiwi.AppMenu" parent="">
+        <item name="android:colorBackground">@color/kiwi_menu_bg</item>
+        <item name="android:textColorPrimary">@color/kiwi_text_primary</item>
+        <item name="android:textColorSecondary">@color/kiwi_text_secondary</item>
+        <item name="colorControlHighlight">@color/kiwi_ripple</item>
+    </style>
+
+    <!-- Overlay for bottom sheets and modal dialogs -->
+    <style name="ThemeOverlay.Kiwi.BottomSheet" parent="">
+        <item name="android:colorBackground">@color/kiwi_bg_elevated</item>
+        <item name="android:textColorPrimary">@color/kiwi_text_primary</item>
+        <item name="android:textColorSecondary">@color/kiwi_text_secondary</item>
+        <item name="colorSurface">@color/kiwi_bg_elevated</item>
+    </style>
+
+    <!-- Overlay for the toolbar (top and bottom) -->
+    <style name="ThemeOverlay.Kiwi.Toolbar" parent="">
+        <item name="android:background">@color/kiwi_bg_toolbar</item>
+        <item name="android:textColorPrimary">@color/kiwi_text_primary</item>
+        <item name="android:textColorSecondary">@color/kiwi_text_secondary</item>
+        <item name="colorControlHighlight">@color/kiwi_ripple</item>
+    </style>
+
+    <!-- Overlay for settings preference lists -->
+    <style name="ThemeOverlay.Kiwi.Settings" parent="">
+        <item name="android:colorBackground">@color/kiwi_settings_bg</item>
+        <item name="colorSurface">@color/kiwi_settings_item_bg</item>
+        <item name="android:textColorPrimary">@color/kiwi_text_primary</item>
+        <item name="android:textColorSecondary">@color/kiwi_text_secondary</item>
+        <item name="colorAccent">@color/kiwi_accent</item>
+    </style>
+
+    <!-- Overlay for the tab switcher grid -->
+    <style name="ThemeOverlay.Kiwi.TabSwitcher" parent="">
+        <item name="android:colorBackground">@color/kiwi_tab_switcher_bg</item>
+        <item name="colorSurface">@color/kiwi_tab_card_bg</item>
+        <item name="android:textColorPrimary">@color/kiwi_text_primary</item>
+        <item name="android:textColorSecondary">@color/kiwi_text_secondary</item>
+    </style>
+
 </resources>

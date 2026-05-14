@@ -401,8 +401,6 @@ public class MainSettings extends PreferenceFragmentCompat
     }
 
     private void onSyncPromoPreferenceStateChanged() {
-        if (true)
-            return;
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.SYNC_ANDROID_PROMOS_WITH_ILLUSTRATION)
                 || ChromeFeatureList.isEnabled(
                         ChromeFeatureList.SYNC_ANDROID_PROMOS_WITH_SINGLE_BUTTON)

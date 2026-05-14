@@ -3,78 +3,91 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
+<!--
+  Kiwi Browser — color overrides for the monochrome UI theme.
+  Raw hex values MUST NOT be added here; always reference @color/kiwi_* from
+  kiwi_monochrome_colors.xml so the palette has a single source of truth.
+  See: res/values/kiwi_monochrome_colors.xml
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Please see src/ui/android/java/res/values/colors.xml for the shared common colors. -->
 
-    <!--  TODO(crbug.com/775198): move all hex color values to color_palette.xml  -->
-    <!-- Other colors -->
-    <color name="dark_action_bar_color">@color/google_blue_grey_900</color>
-    <color name="dark_status_bar_color">#161E21</color>
+    <!-- ── Action bars / status bar ──────────────────────────────────── -->
+    <!-- Dark action bar used by ManageSpace activity — set to toolbar surface -->
+    <color name="dark_action_bar_color">@color/kiwi_bg_toolbar</color>
+    <!-- Status bar behind system icons -->
+    <color name="dark_status_bar_color">@color/kiwi_status_bar</color>
 
-    <!-- Tab Switcher Colors -->
-    <color name="tab_switcher_background">#14181C</color>
-    <color name="accessibility_tab_switcher_list_item">#252525</color>
+    <!-- ── Tab Switcher ───────────────────────────────────────────────── -->
+    <color name="tab_switcher_background">@color/kiwi_tab_switcher_bg</color>
+    <color name="accessibility_tab_switcher_list_item">@color/kiwi_tab_card_bg</color>
 
-    <!-- App menu colors -->
+    <!-- ── App menu ───────────────────────────────────────────────────── -->
+    <!-- Error/update text stays red — intentionally NOT overridden to monochrome -->
     <color name="update_menu_item_text_color">@color/default_red</color>
 
-    <!--  Distilled Page Prefs colors -->
-    <color name="distilled_page_prefs_selected">#999999</color>
-    <color name="distilled_page_prefs_unselected_baseline">@color/dialog_bg_color_baseline</color>
+    <!-- ── Distilled Page Prefs ───────────────────────────────────────── -->
+    <color name="distilled_page_prefs_selected">@color/kiwi_text_secondary</color>
+    <color name="distilled_page_prefs_unselected_baseline">@color/kiwi_bg_elevated</color>
 
-    <!-- Compositor Tab Title Colors -->
-    <color name="compositor_tab_title_bar_text">@color/default_text_color_list</color>
-    <color name="compositor_tab_title_bar_text_incognito">@android:color/white</color>
+    <!-- ── Compositor Tab Titles ─────────────────────────────────────── -->
+    <color name="compositor_tab_title_bar_text">@color/kiwi_text_primary</color>
+    <color name="compositor_tab_title_bar_text_incognito">@color/kiwi_text_primary</color>
 
-    <!-- Account Signin Colors -->
-    <!-- As in dimens.xml, signin uses values from the First Run Experience -->
-    <macro name="signin_head_background">@macro/default_bg_color</macro>
-    <macro name="signin_body_background">@macro/default_bg_color</macro>
-    <color name="signin_header_animation_background">@color/modern_grey_50</color>
-    <color name="signin_header_animation_line_light">#E8E9EB</color>
-    <color name="signin_header_animation_line_dark">#BDC0C5</color>
-    <color name="signin_header_animation_laptop_screen">#F4F4F4</color>
+    <!-- ── Account Signin ────────────────────────────────────────────── -->
+    <macro name="signin_head_background">@color/kiwi_bg_surface</macro>
+    <macro name="signin_body_background">@color/kiwi_bg_surface</macro>
+    <color name="signin_header_animation_background">@color/kiwi_bg_elevated</color>
+    <color name="signin_header_animation_line_light">@color/kiwi_toolbar_border</color>
+    <color name="signin_header_animation_line_dark">@color/kiwi_divider</color>
+    <color name="signin_header_animation_laptop_screen">@color/kiwi_bg_surface</color>
 
-    <!-- NTP and Home sheet colors. Also used on the bookmarks and recent tabs pages. -->
-    <color name="ntp_bg_incognito">@color/default_bg_color_dark</color>
+    <!-- ── NTP / Home sheet ───────────────────────────────────────────── -->
+    <color name="ntp_bg_incognito">@color/kiwi_bg_primary</color>
 
-    <!-- Incognito NTP Colors. -->
-    <color name="incognito_emphasis">@android:color/white</color>
+    <!-- ── Incognito NTP ──────────────────────────────────────────────── -->
+    <color name="incognito_emphasis">@color/kiwi_text_primary</color>
 
-    <!-- Overlay Panel colors -->
-    <macro name="overlay_panel_bar_background_color">@macro/default_bg_color</macro>
+    <!-- ── Overlay Panel ─────────────────────────────────────────────── -->
+    <macro name="overlay_panel_bar_background_color">@color/kiwi_bg_toolbar</macro>
 
-    <!-- Find in Page colors -->
-    <color name="find_in_page_query_white_color">@android:color/white</color>
-    <color name="find_in_page_query_incognito_hint_color">@color/white_alpha_70</color>
+    <!-- ── Find in Page ──────────────────────────────────────────────── -->
+    <color name="find_in_page_query_white_color">@color/kiwi_text_primary</color>
+    <color name="find_in_page_query_incognito_hint_color">@color/kiwi_text_secondary</color>
+    <!-- Error color stays red for usability — do not override -->
     <color name="find_in_page_failed_results_status_color">@color/default_red</color>
-    <color name="find_in_page_query_default_hint_color">@color/default_text_color_secondary_list</color>
+    <color name="find_in_page_query_default_hint_color">@color/kiwi_text_secondary</color>
 
-    <!-- App Background Colors -->
-    <color name="window_background_color">@color/default_bg_color_baseline</color>
-    <color name="navigation_bar_color">@color/default_bg_color_baseline</color>
+    <!-- ── App Window Background ─────────────────────────────────────── -->
+    <color name="window_background_color">@color/kiwi_bg_primary</color>
+    <!-- Bottom system navigation bar -->
+    <color name="navigation_bar_color">@color/kiwi_nav_bar</color>
 
-    <!-- Bookmark widget colors -->
-    <color name="bookmark_widget_pressed_highlight">@color/black_alpha_11</color>
-    <color name="bookmark_widget_background">@color/default_bg_color_baseline</color>
+    <!-- ── Bookmark Widget ────────────────────────────────────────────── -->
+    <color name="bookmark_widget_pressed_highlight">@color/kiwi_overlay_pressed</color>
+    <color name="bookmark_widget_background">@color/kiwi_bg_surface</color>
 
-    <!-- History Navigation UI colors -->
+    <!-- ── History Navigation Bubble ─────────────────────────────────── -->
+    <!-- Arrow renders on web content — keep black -->
     <color name="navigation_bubble_arrow">@android:color/black</color>
 
-    <!-- Scrollbar colors -->
-    <color name="default_scroll_thumb">@color/modern_grey_800_alpha_38</color>
+    <!-- ── Scrollbar ─────────────────────────────────────────────────── -->
+    <color name="default_scroll_thumb">@color/kiwi_text_disabled</color>
 
-    <!-- Explore Sites colors -->
+    <!-- ── Explore Sites ─────────────────────────────────────────────── -->
     <color name="explore_sites_dense_tile_background_color">#00000000</color>
 
-    <!-- Offline indicator v2 colors -->
-    <color name="offline_indicator_offline_color">@android:color/black</color>
+    <!-- ── Offline Indicator ─────────────────────────────────────────── -->
+    <color name="offline_indicator_offline_color">@color/kiwi_bg_primary</color>
 
-    <!-- Other colors -->
-    <color name="media_viewer_bg">#000000</color>
-    <color name="image_viewer_bg">#0E0E0E</color>
-    <color name="thumbnail_placeholder_on_primary_bg" tools:ignore="UnusedResources">@color/default_bg_color_secondary</color>
-    <macro name="tab_layout_selected_tab_color">@macro/default_text_color_accent1</macro>
-    <color name="web_notification_text">#CCCCCC</color>
+    <!-- ── Miscellaneous ─────────────────────────────────────────────── -->
+    <color name="media_viewer_bg">@color/kiwi_bg_primary</color>
+    <color name="image_viewer_bg">@color/kiwi_bg_surface</color>
+    <color name="thumbnail_placeholder_on_primary_bg" tools:ignore="UnusedResources">@color/kiwi_bg_elevated</color>
+    <!-- Tab layout selected indicator — white accent -->
+    <macro name="tab_layout_selected_tab_color">@color/kiwi_accent</macro>
+    <!-- Web notification text -->
+    <color name="web_notification_text">@color/kiwi_text_secondary</color>
 
 </resources>

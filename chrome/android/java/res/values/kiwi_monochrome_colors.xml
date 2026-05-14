@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kiwi Browser — Monochrome UI Palette
+  All Kiwi-specific color tokens live here. Other files reference these
+  via @color/kiwi_* names. Do NOT embed hex values directly in layouts
+  or styles — always reference a token from this file.
+
+  Design rules:
+    - No hue. Strictly achromatic (black/white/grey).
+    - No colored accents, no blue links in chrome UI surfaces.
+    - Background hierarchy: primary < surface < toolbar < elevated < popup
+-->
+<resources>
+
+    <!-- ═══════════════════════════════════════════════
+         BACKGROUND HIERARCHY
+         ═══════════════════════════════════════════════ -->
+
+    <!-- Deepest background — main window, behind everything -->
+    <color name="kiwi_bg_primary">#000000</color>
+
+    <!-- Page-level surface — NTP background, side panels -->
+    <color name="kiwi_bg_surface">#121212</color>
+
+    <!-- Toolbar, bottom bar, tab strip -->
+    <color name="kiwi_bg_toolbar">#1A1A1A</color>
+
+    <!-- One step above toolbar — elevated cards, dialogs, sheets -->
+    <color name="kiwi_bg_elevated">#242424</color>
+
+    <!-- Highest surface — popups, autocomplete dropdown, context menus -->
+    <color name="kiwi_bg_popup">#2C2C2C</color>
+
+    <!-- Tab switcher canvas (darkest to make tab cards "pop") -->
+    <color name="kiwi_tab_switcher_bg">#0A0A0A</color>
+
+    <!-- Individual tab card in the switcher -->
+    <color name="kiwi_tab_card_bg">#1E1E1E</color>
+
+    <!-- App overflow menu background -->
+    <color name="kiwi_menu_bg">#1A1A1A</color>
+
+    <!-- Settings screen background -->
+    <color name="kiwi_settings_bg">#121212</color>
+
+    <!-- Settings preference item background -->
+    <color name="kiwi_settings_item_bg">#1A1A1A</color>
+
+
+    <!-- ═══════════════════════════════════════════════
+         TEXT
+         ═══════════════════════════════════════════════ -->
+
+    <!-- Primary content text, titles -->
+    <color name="kiwi_text_primary">#FFFFFF</color>
+
+    <!-- Secondary / metadata text, URL in omnibox when not focused -->
+    <color name="kiwi_text_secondary">#888888</color>
+
+    <!-- Hint text, placeholder, disabled labels -->
+    <color name="kiwi_text_disabled">#444444</color>
+
+    <!-- Text on dark action bars (settings back-nav bar) -->
+    <color name="kiwi_text_on_toolbar">#FFFFFF</color>
+
+
+    <!-- ═══════════════════════════════════════════════
+         ICONS
+         ═══════════════════════════════════════════════ -->
+
+    <!-- Primary icons (back, forward, refresh, menu) -->
+    <color name="kiwi_icon_primary">#FFFFFF</color>
+
+    <!-- Secondary / low-emphasis icons -->
+    <color name="kiwi_icon_secondary">#888888</color>
+
+    <!-- Disabled icon -->
+    <color name="kiwi_icon_disabled">#333333</color>
+
+
+    <!-- ═══════════════════════════════════════════════
+         STRUCTURAL / DIVIDERS
+         ═══════════════════════════════════════════════ -->
+
+    <!-- Divider lines between list items and sections -->
+    <color name="kiwi_divider">#2A2A2A</color>
+
+    <!-- Toolbar/bottom-bar top/bottom separator line -->
+    <color name="kiwi_toolbar_border">#222222</color>
+
+
+    <!-- ═══════════════════════════════════════════════
+         INTERACTIVE STATES
+         ═══════════════════════════════════════════════ -->
+
+    <!-- Accent — selected state, focus ring, active tab indicator -->
+    <color name="kiwi_accent">#FFFFFF</color>
+
+    <!-- Ripple / pressed state overlay (white 20% alpha) -->
+    <color name="kiwi_ripple">#33FFFFFF</color>
+
+    <!-- Selected item background (e.g. active menu item) -->
+    <color name="kiwi_selected_bg">#2A2A2A</color>
+
+    <!-- Omnibox / URL bar background when focused -->
+    <color name="kiwi_url_bar_focused_bg">#242424</color>
+
+    <!-- Omnibox / URL bar background when at rest -->
+    <color name="kiwi_url_bar_bg">#242424</color>
+
+
+    <!-- ═══════════════════════════════════════════════
+         SYSTEM CHROME
+         ═══════════════════════════════════════════════ -->
+
+    <!-- Android status bar (top, behind clock/signal icons) -->
+    <color name="kiwi_status_bar">#000000</color>
+
+    <!-- Android navigation bar (bottom system bar) -->
+    <color name="kiwi_nav_bar">#000000</color>
+
+
+    <!-- ═══════════════════════════════════════════════
+         ALPHA VARIANTS (for overlays / scrim)
+         ═══════════════════════════════════════════════ -->
+
+    <!-- Black scrim for modal dialogs -->
+    <color name="kiwi_scrim">#99000000</color>
+
+    <!-- Light overlay on dark surfaces for pressed state -->
+    <color name="kiwi_overlay_pressed">#1AFFFFFF</color>
+
+</resources>
