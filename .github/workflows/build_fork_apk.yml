@@ -141,8 +141,9 @@ jobs:
         id: ccache-restore
         uses: actions/cache/restore@v4
         with:
-          # Cache key includes the week number so stale caches don't grow
-          # indefinitely; a new cache is seeded each week.
+          path: ~/.ccache
+          # Cache key includes the run ID so each run seeds a fresh cache entry;
+          # restore-keys falls back to any prior arm64 cache on cache miss.
           key: ccache-arm64-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             ccache-arm64-${{ runner.os }}-
