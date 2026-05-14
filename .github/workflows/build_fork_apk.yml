@@ -25,6 +25,9 @@
 name: 'Fork: Build APK (arm64, self-contained)'
 
 on:
+  push:
+    branches:
+      - kiwi
   workflow_dispatch:
     inputs:
       version_suffix:
