@@ -1,33 +1,25 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # build_fork_apk.yml
 #
-# Builds the Kiwi Browser fork APK for arm64 entirely on GitHub-hosted runners
-# using Chromium's own build system (depot_tools → gclient → gn → ninja).
+# Builds the Kiwi Browser fork APK for arm64 on a GitHub-hosted runner.
 #
-# Key design decisions
-# ────────────────────
-# • NO external build servers, SSH keys, rclone, or Kiwi secrets required.
-# • Uses the production args.gn from .build/production_build_reference/args.gn
-#   with target_cpu overridden to arm64 (it already is arm64).
-# • A one-time throw-away keystore is generated at build time so the APK is
-#   installable but carries no developer key material.
-# • The APK is uploaded as a GitHub Actions artifact (not a Release).
+# Architecture
+# ────────────
+# This fork is a PATCH SET on top of Chromium — it only contains modified
+# files, not the full Chromium source tree. The build therefore has two phases:
 #
-# Runner requirements
-# ─────────────────────────────────────────────────────────────────────────────
-# Chromium builds are extremely disk-hungry (~100 GB after sync) and take
-# several hours even on fast hardware. ubuntu-latest runners provide:
-#   • 2 vCPUs  (ninja -j2 is set accordingly)
-#   • 14 GB RAM
-#   • ~84 GB free disk (after aggressive cleanup)
-#   • No SSD ephemeral disk (unlike self-hosted Azure VMs)
+#   Phase A — Prepare source tree:
+#     1. Check out the fork (modified files only) → fork/
+#     2. Fetch full Chromium at the pinned version (CHROMIUM_VERSION) → src/
+#     3. Overlay the fork's files on top of src/
 #
-# To shorten the build on repeated runs, ccache is configured and its cache is
-# stored with actions/cache. A warm ccache can cut build time by 30–60%.
+#   Phase B — Build:
+#     4. Run build dependency scripts (now that src/build/ exists)
+#     5. gclient runhooks (downloads NDK, SDK, Clang)
+#     6. gn gen + ninja → src/out/android_arm64/apks/ChromePublic.apk
 #
-# If the build times out (6 h GitHub limit), consider:
-#   • Increasing parallelism with a self-hosted runner
-#   • Pre-building a Chromium base image and caching it
+# No external build servers, SSH keys, rclone, or Kiwi secrets required.
+# APK is uploaded as a GitHub Actions artifact (not a Release).
 # ─────────────────────────────────────────────────────────────────────────────
 
 name: 'Fork: Build APK (arm64, self-contained)'
@@ -44,30 +36,27 @@ jobs:
   build_arm64:
     name: Build arm64 APK
     runs-on: ubuntu-latest
-
-    # Give the job up to 6 hours (GitHub Actions maximum for public repos).
     timeout-minutes: 360
 
     steps:
-      # ── 0. Print context ────────────────────────────────────────────────
+      # ── 0. Print context ────────────────────────────────────────────────────
       - name: Print workflow context
         run: |
-          echo "Run ID       : ${{ github.run_id }}"
-          echo "Actor        : ${{ github.actor }}"
-          echo "Ref          : ${{ github.ref }}"
-          echo "Version tag  : ${{ github.event.inputs.version_suffix || 'fork' }}"
+          echo "Run ID  : ${{ github.run_id }}"
+          echo "Actor   : ${{ github.actor }}"
+          echo "Ref     : ${{ github.ref }}"
+          echo "Suffix  : ${{ github.event.inputs.version_suffix || 'fork' }}"
 
-      # ── 1. Free up disk space ────────────────────────────────────────────
-      # GitHub-hosted ubuntu-latest runners start with ~25 GB free.
-      # Chromium requires ~80+ GB, so we must reclaim as much as possible.
-      - name: Reclaim disk space — disable swap
+      # ── 1. Free up disk space ────────────────────────────────────────────────
+      # Chromium source + build output needs ~80 GB.
+      # GitHub-hosted ubuntu-latest starts with ~25 GB free, so we reclaim
+      # everything non-essential before doing anything else.
+      - name: Reclaim disk — disable swap
         run: |
           sudo swapoff -av
           sudo rm -f /swapfile
-          echo "Disk after disabling swap:"
-          df -h
 
-      - name: Reclaim disk space — remove large pre-installed packages
+      - name: Reclaim disk — remove large pre-installed packages
         run: |
           sudo rm -rf \
             /usr/share/dotnet \
@@ -83,10 +72,10 @@ jobs:
             firefox powershell mono-devel || true
           sudo apt-get autoremove -y
           sudo apt-get clean
-          echo "Disk after cleanup:"
+          echo "=== Disk after cleanup ==="
           df -h
 
-      # ── 2. Install build dependencies ────────────────────────────────────
+      # ── 2. Install system build dependencies ─────────────────────────────────
       - name: Install system build dependencies
         run: |
           sudo apt-get update -qq
@@ -100,33 +89,44 @@ jobs:
             libc6-dev libffi-dev libssl-dev \
             binutils
 
-      # ── 3. Check out the fork ────────────────────────────────────────────
-      # We check out the fork (this repo) into $GITHUB_WORKSPACE/src
-      # because depot_tools expects the Chromium source at a path
-      # named "src" adjacent to the DEPS / .gclient file.
-      - name: Checkout fork source
+      # ── 3. Check out the fork ────────────────────────────────────────────────
+      # The fork contains only modified files (chrome/, base/, components/, etc.)
+      # We check it out into fork/ so we can overlay it on top of Chromium later.
+      - name: Checkout fork (modified files)
         uses: actions/checkout@v4
         with:
-          path: src
+          path: fork
           fetch-depth: 1
 
-      # ── 4. Install depot_tools ───────────────────────────────────────────
+      # ── 4. Read the pinned Chromium version ──────────────────────────────────
+      - name: Read pinned Chromium version
+        id: chromium_ver
+        run: |
+          source fork/CHROMIUM_VERSION
+          TAG="${CHROMIUM_MAJOR}.${CHROMIUM_MINOR}.${CHROMIUM_BUILD}.${CHROMIUM_PATCH}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Pinned Chromium version: $TAG"
+
+      # ── 5. Install depot_tools ───────────────────────────────────────────────
       - name: Install depot_tools
         run: |
-          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git depot_tools
+          git clone --depth=1 \
+            https://chromium.googlesource.com/chromium/tools/depot_tools.git \
+            depot_tools
           echo "$GITHUB_WORKSPACE/depot_tools" >> $GITHUB_PATH
 
-      # ── 5. Write .gclient file ───────────────────────────────────────────
-      # gclient sync resolves all DEPS and downloads third-party libraries.
-      # We point it at the fork repo (already checked out) so gclient doesn't
-      # re-clone the main Chromium repo — it only fetches missing dependencies.
+      # ── 6. Write .gclient pointing at the pinned Chromium tag ────────────────
+      # This tells gclient to fetch the FULL Chromium source at exactly the
+      # version this fork was built against. The fork's DEPS are irrelevant here;
+      # we want the upstream Chromium DEPS at that tag.
       - name: Write .gclient configuration
         run: |
-          cat > .gclient <<'EOF'
+          TAG="${{ steps.chromium_ver.outputs.tag }}"
+          cat > .gclient <<EOF
           solutions = [
             {
               "name": "src",
-              "url": "https://github.com/${{ github.repository }}.git",
+              "url": "https://chromium.googlesource.com/chromium/src.git@refs/tags/${TAG}",
               "managed": False,
               "custom_deps": {},
               "custom_vars": {},
@@ -134,16 +134,15 @@ jobs:
           ]
           target_os = ["android"]
           EOF
+          echo "=== .gclient ==="
           cat .gclient
 
-      # ── 6. Restore ccache cache ──────────────────────────────────────────
+      # ── 7. Restore ccache ────────────────────────────────────────────────────
       - name: Restore ccache cache
         id: ccache-restore
         uses: actions/cache/restore@v4
         with:
           path: ~/.ccache
-          # Cache key includes the run ID so each run seeds a fresh cache entry;
-          # restore-keys falls back to any prior arm64 cache on cache miss.
           key: ccache-arm64-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             ccache-arm64-${{ runner.os }}-
@@ -154,75 +153,80 @@ jobs:
           ccache --set-config=cache_dir=$HOME/.ccache
           ccache --set-config=compression=true
           ccache --set-config=compression_level=6
-          ccache -z   # zero statistics
-          echo "CC=ccache clang"   >> $GITHUB_ENV
-          echo "CXX=ccache clang++" >> $GITHUB_ENV
+          ccache -z
 
-      # ── 7. gclient sync ──────────────────────────────────────────────────
-      # --no-history        — shallow clones for all deps (saves ~20 GB)
-      # --nohooks           — don't run hooks yet (we run install-build-deps ourselves)
-      # --force             — always overwrite local changes in deps
-      # --reset             — reset any local modifications in deps
-      - name: Sync Chromium dependencies (gclient sync)
+      # ── 8. gclient sync — fetch full Chromium source ─────────────────────────
+      # This downloads ~20–30 GB of source code.
+      # --no-history : shallow clones for all deps (saves ~20 GB bandwidth)
+      # --nohooks    : skip hooks; we run install-build-deps-android.sh manually
+      # --force/--reset : overwrite any local state
+      # -D           : delete deps that are no longer needed
+      - name: Sync full Chromium source (gclient sync)
         run: |
-          cd src
           gclient sync \
             --no-history \
             --nohooks \
             --force \
             --reset \
-            --with_branch_heads \
             -D
         env:
           DEPOT_TOOLS_UPDATE: "0"
 
-      # ── 8. Install Android-specific build dependencies ────────────────────
-      - name: Install Android build dependencies (install-build-deps-android.sh)
+      # ── 9. Overlay fork modifications ────────────────────────────────────────
+      # Copy the fork's modified files on top of the freshly synced Chromium src.
+      # This is the equivalent of what Kiwi's build server does: it rebases the
+      # fork's commits onto the Chromium base and builds the merged tree.
+      - name: Overlay fork files onto Chromium source
         run: |
-          cd src
-          # install-build-deps-android.sh handles NDK, SDK, and Linux libs
-          # needed for cross-compiling to Android/arm64.
-          sudo ./build/install-build-deps-android.sh
+          echo "=== Overlaying fork modifications ==="
+          for dir in chrome base components content extensions net remoting services third_party ui; do
+            if [ -d "fork/$dir" ]; then
+              echo "  Overlaying fork/$dir → src/$dir"
+              cp -r "fork/$dir/." "src/$dir/"
+            fi
+          done
+          echo "=== Overlay complete ==="
+          df -h
 
-      # ── 9. Run gclient hooks ──────────────────────────────────────────────
-      # Hooks download the Android SDK, NDK, Clang toolchain, etc.
-      - name: Run gclient runhooks
+      # ── 10. Install Android build dependencies ───────────────────────────────
+      # Now that src/build/ exists (from the Chromium sync), this script works.
+      - name: Install Android build dependencies
         run: |
-          cd src
-          gclient runhooks
+          sudo src/build/install-build-deps-android.sh
+
+      # ── 11. gclient runhooks ─────────────────────────────────────────────────
+      # Downloads the Android NDK, SDK, and Clang toolchain.
+      - name: Run gclient runhooks
+        run: gclient runhooks
         env:
           DEPOT_TOOLS_UPDATE: "0"
 
-      # ── 10. Set up the output directory and args.gn ────────────────────────
+      # ── 12. Create output directory and write args.gn ────────────────────────
       - name: Create output directory and write args.gn
         run: |
           mkdir -p src/out/android_arm64
 
-          # Use the production args.gn from the repo as the base, then:
-          #   • Force target_cpu = arm64 (already set, but be explicit)
-          #   • Set a deterministic version name from the run ID
-          #   • Point at the throw-away keystore we'll generate next
           VERSION_NAME="Git$(date '+%y%m%d')${{ github.event.inputs.version_suffix || 'fork' }}"
-          VERSION_CODE="$(date '+%y%m%d')2"   # "2" suffix = arm64 convention
+          VERSION_CODE="$(date '+%y%m%d')2"
 
+          # Derive from the production args.gn in the fork
           sed \
             -e "s|target_cpu = \"arm\"|target_cpu = \"arm64\"|g" \
             -e "s|android_default_version_name = \"Git\"|android_default_version_name = \"${VERSION_NAME}\"|" \
             -e "s|android_default_version_code = \"1\"|android_default_version_code = \"${VERSION_CODE}\"|" \
-            src/.build/production_build_reference/args.gn \
+            fork/.build/production_build_reference/args.gn \
             > src/out/android_arm64/args.gn
 
-          # Make sure symbol_level=0 to save disk space and speed up linking.
-          # The production config has symbol_level=1 which adds ~4 GB of .so.dbg files.
+          # symbol_level=0 saves ~4 GB of debug symbol files
           echo "symbol_level = 0" >> src/out/android_arm64/args.gn
 
           echo "=== args.gn ==="
           cat src/out/android_arm64/args.gn
 
-      # ── 11. Generate a throw-away signing key ─────────────────────────────
-      # The production args.gn references ../../keystore.jks (relative to
-      # out/android_arm64, which resolves to src/keystore.jks).
-      - name: Generate throw-away APK signing keystore
+      # ── 13. Generate throw-away signing keystore ─────────────────────────────
+      # args.gn references ../../keystore.jks relative to out/android_arm64,
+      # which resolves to src/keystore.jks.
+      - name: Generate throw-away signing keystore
         run: |
           keytool \
             -genkey -v \
@@ -234,17 +238,15 @@ jobs:
             -storepass public_password \
             -keypass  public_password \
             -dname "CN=Kiwi Fork (unverified), OU=GHA, O=Fork, C=GH"
-          echo "Keystore generated at src/keystore.jks"
 
-      # ── 12. Run GN generate ────────────────────────────────────────────────
+      # ── 14. gn gen ───────────────────────────────────────────────────────────
       - name: Generate build files (gn gen)
         run: |
           cd src
           gn gen out/android_arm64
 
-      # ── 13. Build ChromePublic.apk ────────────────────────────────────────
-      # ninja -j2 limits parallelism to the runner's 2 vCPUs to avoid OOM.
-      # chrome_public_apk is the standard Chromium Android APK target.
+      # ── 15. ninja — build chrome_public_apk ─────────────────────────────────
+      # -j2 matches the 2 vCPUs available on ubuntu-latest.
       - name: Build chrome_public_apk (arm64)
         run: |
           cd src
@@ -252,12 +254,12 @@ jobs:
         env:
           CCACHE_DIR: ${{ env.HOME }}/.ccache
 
-      # ── 14. Print ccache statistics ───────────────────────────────────────
+      # ── 16. Print ccache stats ───────────────────────────────────────────────
       - name: Print ccache statistics
         if: always()
         run: ccache -s
 
-      # ── 15. Save ccache cache ─────────────────────────────────────────────
+      # ── 17. Save ccache ──────────────────────────────────────────────────────
       - name: Save ccache cache
         if: always()
         uses: actions/cache/save@v4
@@ -265,25 +267,19 @@ jobs:
           path: ~/.ccache
           key: ccache-arm64-${{ runner.os }}-${{ github.run_id }}
 
-      # ── 16. Verify the APK was produced ───────────────────────────────────
-      # The APK is always written to this path by the chrome_public_apk target.
-      # We verify it exists and print its size before uploading.
+      # ── 18. Verify APK ───────────────────────────────────────────────────────
       - name: Verify APK output
         run: |
-          APK_PATH="src/out/android_arm64/apks/ChromePublic.apk"
-          if [ ! -f "$APK_PATH" ]; then
-            echo "❌ ChromePublic.apk not found at expected path: $APK_PATH"
-            echo "Searching for any APK in out/ ..."
+          APK="src/out/android_arm64/apks/ChromePublic.apk"
+          if [ ! -f "$APK" ]; then
+            echo "❌ ChromePublic.apk not found at: $APK"
             find src/out/android_arm64/ -name "*.apk" 2>/dev/null | head -10
             exit 1
           fi
-          echo "✅ APK found: $APK_PATH"
-          ls -lh "$APK_PATH"
+          echo "✅ APK found: $APK"
+          ls -lh "$APK"
 
-      # ── 17. Upload APK as GitHub Actions artifact ─────────────────────────
-      # path is a hardcoded literal — no env var interpolation — so it is
-      # always evaluated correctly by the Actions runner.
-      # The artifact name carries the human-readable run metadata.
+      # ── 19. Upload APK artifact ──────────────────────────────────────────────
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -292,8 +288,8 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      # ── 18. Summarize ─────────────────────────────────────────────────────
-      - name: Write job summary
+      # ── 20. Job summary ──────────────────────────────────────────────────────
+      - name: Write success summary
         if: success()
         run: |
           echo "## ✅ Build succeeded" >> $GITHUB_STEP_SUMMARY
@@ -301,13 +297,12 @@ jobs:
           echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| APK | \`ChromePublic.apk\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Artifact name | \`kiwi-fork-arm64-${{ github.run_id }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact | \`kiwi-fork-arm64-${{ github.run_id }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Architecture | arm64 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Chromium base | ${{ steps.chromium_ver.outputs.tag }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Run ID | ${{ github.run_id }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Actor | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Chromium base | $(cat src/CHROMIUM_VERSION | tr '\n' ' ') |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Download the APK from the **Artifacts** section of this run." >> $GITHUB_STEP_SUMMARY
+          echo "Download from the **Artifacts** section of this run." >> $GITHUB_STEP_SUMMARY
 
       - name: Write failure summary
         if: failure()
@@ -316,7 +311,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Check the step logs above for the error." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Disk usage at failure" >> $GITHUB_STEP_SUMMARY
+          echo "### Disk at failure" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           df -h >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
