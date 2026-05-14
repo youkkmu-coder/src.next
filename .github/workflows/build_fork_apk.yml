@@ -264,31 +264,30 @@ jobs:
           path: ~/.ccache
           key: ccache-arm64-${{ runner.os }}-${{ github.run_id }}
 
-      # ── 16. Locate and rename the APK ─────────────────────────────────────
-      - name: Locate and rename APK
+      # ── 16. Verify the APK was produced ───────────────────────────────────
+      # The APK is always written to this path by the chrome_public_apk target.
+      # We verify it exists and print its size before uploading.
+      - name: Verify APK output
         run: |
-          APK_SRC="src/out/android_arm64/apks/ChromePublic.apk"
-          if [ ! -f "$APK_SRC" ]; then
-            echo "ChromePublic.apk not found, looking for alternatives..."
-            find src/out/android_arm64/apks/ -name "*.apk" | head -5
+          APK_PATH="src/out/android_arm64/apks/ChromePublic.apk"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "❌ ChromePublic.apk not found at expected path: $APK_PATH"
+            echo "Searching for any APK in out/ ..."
+            find src/out/android_arm64/ -name "*.apk" 2>/dev/null | head -10
             exit 1
           fi
-
-          VERSION_NAME=$(grep 'android_default_version_name' src/out/android_arm64/args.gn \
-            | sed 's/.*= *"\(.*\)".*/\1/')
-          APK_NAME="kiwi-fork-arm64-${VERSION_NAME}-${{ github.run_id }}.apk"
-          cp "$APK_SRC" "$APK_NAME"
-          echo "APK_NAME=$APK_NAME" >> $GITHUB_ENV
-          echo "APK built: $APK_NAME"
-          ls -lh "$APK_NAME"
+          echo "✅ APK found: $APK_PATH"
+          ls -lh "$APK_PATH"
 
       # ── 17. Upload APK as GitHub Actions artifact ─────────────────────────
-      # The artifact is downloadable from the Actions run page for 30 days.
+      # path is a hardcoded literal — no env var interpolation — so it is
+      # always evaluated correctly by the Actions runner.
+      # The artifact name carries the human-readable run metadata.
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: kiwi-fork-arm64-${{ github.run_id }}
-          path: ${{ env.APK_NAME }}
+          path: src/out/android_arm64/apks/ChromePublic.apk
           retention-days: 30
           if-no-files-found: error
 
@@ -300,7 +299,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| APK | \`${{ env.APK_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| APK | \`ChromePublic.apk\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact name | \`kiwi-fork-arm64-${{ github.run_id }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Architecture | arm64 |" >> $GITHUB_STEP_SUMMARY
           echo "| Run ID | ${{ github.run_id }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Actor | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
