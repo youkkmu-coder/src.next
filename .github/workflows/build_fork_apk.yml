@@ -35,7 +35,10 @@ on:
 jobs:
   build_arm64:
     name: Build arm64 APK
-    runs-on: ubuntu-latest
+    # ubuntu-20.04 (Focal) is required: Chromium 105's install-build-deps-android.sh
+    # explicitly checks the distro and rejects Ubuntu 22.04+ (ubuntu-latest).
+    # Focal is on Chromium's supported list and will stay available on GHA runners.
+    runs-on: ubuntu-20.04
     timeout-minutes: 360
 
     steps:
