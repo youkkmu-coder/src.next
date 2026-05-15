@@ -4,7 +4,7 @@ jobs:
   build_arm64:
     machine:
       image: ubuntu-2004:current
-    resource_class: xlarge
+    resource_class: medium
     environment:
       DEPOT_TOOLS_UPDATE: "0"
     steps:
@@ -162,7 +162,7 @@ jobs:
           name: Build chrome_public_apk (arm64)
           command: |
             cd src
-            ninja -C out/android_arm64 -j8 chrome_public_apk
+            ninja -C out/android_arm64 -j2 chrome_public_apk
           environment:
             CCACHE_DIR: /home/circleci/.ccache
 
