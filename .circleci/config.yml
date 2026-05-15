@@ -116,7 +116,10 @@ jobs:
 
       - run:
           name: Run gclient runhooks
-          command: gclient runhooks
+          command: |
+            mkdir -p src/tools/traffic_annotation/bin/linux64
+            touch src/tools/traffic_annotation/bin/linux64/traffic_annotation_auditor
+            gclient runhooks
 
       - run:
           name: Create output directory and write args.gn
