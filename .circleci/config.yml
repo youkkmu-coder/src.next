@@ -1,0 +1,208 @@
+version: 2.1
+
+jobs:
+  build_arm64:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: xlarge
+    environment:
+      DEPOT_TOOLS_UPDATE: "0"
+    steps:
+      - run:
+          name: Create fork directory
+          command: mkdir -p fork
+
+      - checkout:
+          path: fork
+
+      - run:
+          name: Print context
+          command: |
+            echo "Branch: $CIRCLE_BRANCH"
+
+      - run:
+          name: Reclaim disk
+          command: |
+            sudo swapoff -av || true
+            sudo rm -f /swapfile
+            df -h
+
+      - run:
+          name: Install system build dependencies
+          command: |
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends \
+              python3 python3-pip python-is-python3 \
+              git curl wget ca-certificates \
+              openjdk-11-jdk-headless \
+              ccache lsb-release \
+              pkg-config zip unzip \
+              xz-utils bzip2 \
+              libc6-dev libffi-dev libssl-dev \
+              binutils
+
+      - run:
+          name: Read pinned Chromium version
+          command: |
+            source fork/CHROMIUM_VERSION
+            TAG="${CHROMIUM_MAJOR}.${CHROMIUM_MINOR}.${CHROMIUM_BUILD}.${CHROMIUM_PATCH}"
+            echo "export CHROMIUM_TAG=$TAG" >> $BASH_ENV
+            echo "Pinned Chromium version: $TAG"
+
+      - run:
+          name: Install depot_tools
+          command: |
+            git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git depot_tools
+            echo 'export PATH="$CIRCLE_WORKING_DIRECTORY/depot_tools:$PATH"' >> $BASH_ENV
+
+      - run:
+          name: Write .gclient configuration
+          command: |
+            cat > .gclient <<EOF
+            solutions = [
+              {
+                "name": "src",
+                "url": "https://chromium.googlesource.com/chromium/src.git@refs/tags/${CHROMIUM_TAG}",
+                "managed": False,
+                "custom_deps": {},
+                "custom_vars": {},
+              },
+            ]
+            target_os = ["android"]
+            EOF
+            echo "=== .gclient ==="
+            cat .gclient
+
+      - restore_cache:
+          keys:
+            - ccache-arm64-{{ .Branch }}-{{ checksum "fork/CHROMIUM_VERSION" }}
+            - ccache-arm64-{{ .Branch }}-
+            - ccache-arm64-
+
+      - run:
+          name: Configure ccache
+          command: |
+            ccache --set-config=max_size=15G
+            ccache --set-config=cache_dir=$HOME/.ccache
+            ccache --set-config=compression=true
+            ccache --set-config=compression_level=6
+            ccache -z
+
+      - run:
+          name: Sync full Chromium source (gclient sync)
+          command: |
+            gclient sync \
+              --no-history \
+              --nohooks \
+              --force \
+              --reset \
+              -D
+
+      - run:
+          name: Overlay fork files onto Chromium source
+          command: |
+            echo "=== Overlaying fork modifications ==="
+            for dir in chrome base components content extensions net remoting services third_party ui; do
+              if [ -d "fork/$dir" ]; then
+                echo "  Overlaying fork/$dir → src/$dir"
+                cp -r "fork/$dir/." "src/$dir/"
+              fi
+            done
+            echo "=== Overlay complete ==="
+            df -h
+
+      - run:
+          name: Install Android build dependencies
+          command: |
+            sudo src/build/install-build-deps-android.sh
+
+      - run:
+          name: Run gclient runhooks
+          command: gclient runhooks
+
+      - run:
+          name: Create output directory and write args.gn
+          command: |
+            mkdir -p src/out/android_arm64
+            
+            VERSION_NAME="Git$(date '+%y%m%d')fork"
+            VERSION_CODE="$(date '+%y%m%d')2"
+            
+            sed \
+              -e "s|target_cpu = \"arm\"|target_cpu = \"arm64\"|g" \
+              -e "s|android_default_version_name = \"Git\"|android_default_version_name = \"${VERSION_NAME}\"|" \
+              -e "s|android_default_version_code = \"1\"|android_default_version_code = \"${VERSION_CODE}\"|" \
+              fork/.build/production_build_reference/args.gn \
+              > src/out/android_arm64/args.gn
+            
+            echo "symbol_level = 0" >> src/out/android_arm64/args.gn
+            
+            echo "=== args.gn ==="
+            cat src/out/android_arm64/args.gn
+
+      - run:
+          name: Generate throw-away signing keystore
+          command: |
+            keytool \
+              -genkey -v \
+              -keystore src/keystore.jks \
+              -alias dev \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass public_password \
+              -keypass  public_password \
+              -dname "CN=Kiwi Fork (unverified), OU=GHA, O=Fork, C=GH"
+
+      - run:
+          name: Generate build files (gn gen)
+          command: |
+            cd src
+            gn gen out/android_arm64
+
+      - run:
+          name: Build chrome_public_apk (arm64)
+          command: |
+            cd src
+            ninja -C out/android_arm64 -j8 chrome_public_apk
+          environment:
+            CCACHE_DIR: /home/circleci/.ccache
+
+      - run:
+          name: Print ccache statistics
+          command: ccache -s
+          when: always
+
+      - save_cache:
+          key: ccache-arm64-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ~/.ccache
+          when: always
+
+      - run:
+          name: Verify APK output
+          command: |
+            APK="src/out/android_arm64/apks/ChromePublic.apk"
+            if [ ! -f "$APK" ]; then
+              echo "❌ ChromePublic.apk not found at: $APK"
+              find src/out/android_arm64/ -name "*.apk" 2>/dev/null | head -10
+              exit 1
+            fi
+            echo "✅ APK found: $APK"
+            ls -lh "$APK"
+            mkdir -p /tmp/artifacts
+            cp "$APK" /tmp/artifacts/
+
+      - store_artifacts:
+          path: /tmp/artifacts/ChromePublic.apk
+          destination: ChromePublic.apk
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build_arm64:
+          filters:
+            branches:
+              only:
+                - kiwi
