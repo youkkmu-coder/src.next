@@ -151,10 +151,18 @@ jobs:
               -dname "CN=Kiwi Fork (unverified), OU=GHA, O=Fork, C=GH"
 
       - run:
+          name: Debug depot_tools contents
+          command: |
+            echo "--- bootstrap ---"
+            ls /home/circleci/project/depot_tools/ | grep -i bootstrap || true
+            echo "--- update ---"
+            ls /home/circleci/project/depot_tools/ | grep -i update || true
+
+      - run:
           name: Generate build files (gn gen)
           command: |
             export DEPOT_TOOLS_UPDATE=1
-            cd /home/circleci/project/depot_tools && python3 ensure_bootstrap.py
+            cd /home/circleci/project/depot_tools && ./update_depot_tools
             cd /home/circleci/project/src
             gn gen out/android_arm64
 
