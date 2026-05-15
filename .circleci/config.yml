@@ -58,18 +58,16 @@ jobs:
       - run:
           name: Write .gclient configuration
           command: |
-            cat > .gclient \<<EOF
-            solutions = [
-              {
-                "name": "src",
-                "url": "https://chromium.googlesource.com/chromium/src.git@refs/tags/${CHROMIUM_TAG}",
-                "managed": False,
-                "custom_deps": {},
-                "custom_vars": {},
-              },
-            ]
-            target_os = ["android"]
-            EOF
+            echo 'solutions = [' > .gclient
+            echo '  {' >> .gclient
+            echo '    "name": "src",' >> .gclient
+            echo '    "url": "https://chromium.googlesource.com/chromium/src.git@refs/tags/'"${CHROMIUM_TAG}"'",' >> .gclient
+            echo '    "managed": False,' >> .gclient
+            echo '    "custom_deps": {},' >> .gclient
+            echo '    "custom_vars": {},' >> .gclient
+            echo '  },' >> .gclient
+            echo ']' >> .gclient
+            echo 'target_os = ["android"]' >> .gclient
             echo "=== .gclient ==="
             cat .gclient
 
