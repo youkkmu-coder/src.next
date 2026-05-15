@@ -117,8 +117,12 @@ jobs:
       - run:
           name: Run gclient runhooks
           command: |
-            mkdir -p src/tools/traffic_annotation/bin/linux64
-            touch src/tools/traffic_annotation/bin/linux64/traffic_annotation_auditor
+            python3 -c "
+            import json, re
+            deps = open('src/DEPS').read()
+            deps = re.sub(r\"Var\('checkout_traffic_annotation_tools'\)\", 'False', deps)
+            open('src/DEPS', 'w').write(deps)
+            "
             gclient runhooks
 
       - run:
