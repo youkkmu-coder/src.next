@@ -132,6 +132,9 @@ jobs:
               > src/out/android_arm64/args.gn
             
             echo "symbol_level = 0" >> src/out/android_arm64/args.gn
+            echo "enable_extensions_shell = false" >> src/out/android_arm64/args.gn
+            echo "enable_nacl = false" >> src/out/android_arm64/args.gn
+            echo "enable_nacl_nonsfi = false" >> src/out/android_arm64/args.gn
             
             echo "=== args.gn ==="
             cat src/out/android_arm64/args.gn
