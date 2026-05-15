@@ -64,7 +64,7 @@ jobs:
             echo '    "url": "https://chromium.googlesource.com/chromium/src.git@refs/tags/'"${CHROMIUM_TAG}"'",' >> .gclient
             echo '    "managed": False,' >> .gclient
             echo '    "custom_deps": {},' >> .gclient
-            echo '    "custom_vars": {},' >> .gclient
+            echo '    "custom_vars": {"checkout_traffic_annotation_tools": False},' >> .gclient
             echo '  },' >> .gclient
             echo ']' >> .gclient
             echo 'target_os = ["android"]' >> .gclient
@@ -116,14 +116,7 @@ jobs:
 
       - run:
           name: Run gclient runhooks
-          command: |
-            python3 -c "
-            import json, re
-            deps = open('src/DEPS').read()
-            deps = re.sub(r\"Var\('checkout_traffic_annotation_tools'\)\", 'False', deps)
-            open('src/DEPS', 'w').write(deps)
-            "
-            gclient runhooks
+          command: gclient runhooks
 
       - run:
           name: Create output directory and write args.gn
