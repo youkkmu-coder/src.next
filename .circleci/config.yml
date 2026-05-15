@@ -58,7 +58,7 @@ jobs:
       - run:
           name: Write .gclient configuration
           command: |
-            cat > .gclient <<EOF
+            cat > .gclient \<<EOF
             solutions = [
               {
                 "name": "src",
