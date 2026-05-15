@@ -155,6 +155,7 @@ jobs:
       - run:
           name: Generate build files (gn gen)
           command: |
+            update_depot_tools
             cd src
             gn gen out/android_arm64
 
