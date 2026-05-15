@@ -169,6 +169,7 @@ jobs:
             export DEPOT_TOOLS_UPDATE=1
             cd /home/circleci/project/depot_tools && ./update_depot_tools
             cd /home/circleci/project/src
+            sed -i 's|"//components/guest_view/browser:test_support",||g' extensions/BUILD.gn
             gn gen out/android_arm64
 
       - run:
